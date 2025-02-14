@@ -20,8 +20,49 @@ function centerAspectCrop(mediaWidth: number, mediaHeight: number) {
   );
 }
 
+// Function to create a cropped image
+function getCroppedImg(image: HTMLImageElement, crop: PixelCrop): Promise<string> {
+  const canvas = document.createElement('canvas');
+  const scaleX = image.naturalWidth / image.width;
+  const scaleY = image.naturalHeight / image.height;
+  canvas.width = crop.width;
+  canvas.height = crop.height;
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    throw new Error('No 2d context');
+  }
+
+  ctx.drawImage(
+    image,
+    crop.x * scaleX,
+    crop.y * scaleY,
+    crop.width * scaleX,
+    crop.height * scaleY,
+    0,
+    0,
+    crop.width,
+    crop.height
+  );
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error('Canvas is empty'));
+          return;
+        }
+        resolve(URL.createObjectURL(blob));
+      },
+      'image/jpeg',
+      1
+    );
+  });
+}
+
 function App() {
   const [imgSrc, setImgSrc] = useState('');
+  const [croppedImageUrl, setCroppedImageUrl] = useState('');
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [name, setName] = useState('');
@@ -35,6 +76,7 @@ function App() {
       const reader = new FileReader();
       reader.addEventListener('load', () => {
         setImgSrc(reader.result?.toString() || '');
+        setCroppedImageUrl('');
         setIsCropping(true);
       });
       reader.readAsDataURL(e.target.files[0]);
@@ -46,12 +88,21 @@ function App() {
     setCrop(centerAspectCrop(width, height));
   };
 
-  const handleCropComplete = () => {
-    setIsCropping(false);
+  const handleCropComplete = async () => {
+    if (completedCrop && imgRef.current) {
+      try {
+        const croppedImage = await getCroppedImg(imgRef.current, completedCrop);
+        setCroppedImageUrl(croppedImage);
+        setIsCropping(false);
+      } catch (e) {
+        console.error('Error cropping image:', e);
+      }
+    }
   };
 
   const handleReset = () => {
     setImgSrc('');
+    setCroppedImageUrl('');
     setName('');
     setCrop(undefined);
     setCompletedCrop(undefined);
@@ -198,7 +249,6 @@ function App() {
                   style={{
                     position: 'relative',
                     width: '100%',
-                    // maxWidth: '600px',
                     aspectRatio: '368/516',
                     margin: '0',
                     backgroundColor: 'white',
@@ -218,7 +268,7 @@ function App() {
                     crossOrigin="anonymous"
                   />
 
-                  {imgSrc && (
+                  {(croppedImageUrl || imgSrc) && (
                     <div 
                       style={{ 
                         position: 'absolute',
@@ -241,7 +291,7 @@ function App() {
                         }}
                       >
                         <img
-                          src={imgSrc}
+                          src={croppedImageUrl || imgSrc}
                           alt="Selected"
                           className="user-image"
                           style={{
