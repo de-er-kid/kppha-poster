@@ -349,7 +349,7 @@ function App() {
                     className="flex-1 flex items-center justify-center space-x-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Download className="w-5 h-5" />
-                    <span>{isDownloading ? 'Generating...' : 'Download Poster'}</span>
+                    <span>{isDownloading ? 'Generating...' : 'Download'}</span>
                   </button>
                 </div>
               </>
