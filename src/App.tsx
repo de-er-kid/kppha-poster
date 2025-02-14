@@ -3,6 +3,7 @@ import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-im
 import { Upload, Download, RefreshCw } from 'lucide-react';
 import 'react-image-crop/dist/ReactCrop.css';
 import html2canvas from 'html2canvas';
+import { Analytics } from "@vercel/analytics/react"
 
 function centerAspectCrop(mediaWidth: number, mediaHeight: number) {
   return centerCrop(
@@ -357,6 +358,7 @@ function App() {
           </div>
         </div>
       </div>
+      <Analytics/>
     </div>
   );
 }
